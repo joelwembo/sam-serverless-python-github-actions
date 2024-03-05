@@ -76,7 +76,7 @@ clean:
 	@ echo "All done!"
 
 dockerrun dkr:
-	@ docker run -p 8000:8000 -d --rm --network lambda-local --name dynamodb -v $(CURDIR)/local/dynamodb:/data/ amazon/dynamodb-local -jar DynamoDBLocal.jar -sharedDb -dbPath /data
+	@ docker run -p 8000:8000 -d --rm --network lambda-local --name dynamodb -v /local/dynamodb:/data/ amazon/dynamodb-local -jar DynamoDBLocal.jar -sharedDb -dbPath /data
 
 dockerstop dks:
 	@ docker stop dynamodb
