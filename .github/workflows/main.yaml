@@ -1,0 +1,60 @@
+name: saas-sam-cli
+
+on:
+  push:
+    branches: 
+        - main
+        - master
+        - develop
+        - 'release/*'
+    tags: 
+        - prod-v*
+  pull_request:
+    branches: 
+        - main
+        - master
+        - develop
+        - 'release/*'
+
+env:
+    BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+    AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+    AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    AWS_DEFAULT_REGION: "ap-southeast-1"                
+  
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    strategy:
+        max-parallel: 4
+        matrix:
+          python-version: [3.8]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+      - name: Install dependencies
+        run: |
+            python -m pip install --upgrade pip
+            pip install -r requirements.txt
+            pip install -r requirements_dev.txt
+      - uses: aws-actions/setup-sam@v2
+        with:
+            use-installer: true
+  
+      - uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_DEFAULT_REGION }}
+
+      # sam build 
+      - run: sam build --use-container
+
+      # Run Unit tests- Specify unit tests here 
+
+      # sam deploy
+      - run: sam deploy
+      - name: Tests with tox
+        run: |
+            tox
